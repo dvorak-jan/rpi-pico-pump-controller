@@ -60,24 +60,26 @@ unsigned read_adc_task(int gpio)
     adc_gpio_init(gpio);
     adc_select_input(0);
 
-    unsigned readings[100];
-    for (int i = 0; i < 100; i++) {
+    unsigned readings[200];
+    for (int i = 0; i < 200; i++) {
         readings[i] = adc_read();
-        vTaskDelay(10); // Delay for 20 milliseconds between each reading
+        vTaskDelay(10); // Delay for 10 milliseconds between each reading
     }
 
-    std::sort(readings, readings + 100); // Sort the readings in ascending order
+    std::sort(readings, readings + 200); // Sort the readings in ascending order
 
-    return readings[50]; // Return the median value (middle value)
+    return readings[100]; // Return the median value (middle value)
 }
 
 void vTaskCode( void * pvParameters )
 {
     init_led_task();
+    unsigned counterOkReadings{0};
+    unsigned counterErrorReadings{0};
+    unsigned counterRelayOn{0};
 
     while (true)
     {
-        unsigned adjustment{0};
         auto waterLevel = read_adc_task(26);
 
         if(waterLevel > 0)
@@ -85,22 +87,26 @@ void vTaskCode( void * pvParameters )
             led_task(18, 1);
             vTaskDelay(300);
             led_task(18, 0);
+            counterOkReadings++;
         }
         else
         {
             led_task(16, 1);
             vTaskDelay(300);
             led_task(16, 0);
+            counterErrorReadings++;
         }
         if (waterLevel > 65) // 110
         {
             relay_task(1);
+            counterRelayOn++;
         }
-        if (waterLevel < 35) // 35
+        if (waterLevel <= 35) // < 35
         {
             relay_task(0);
         }
-        vTaskDelay(2000);
+        vTaskDelay(1000);
+        printf("Counter OK readings: %d\nCounter error readings: %d\ncounter relay on: %d\n", counterOkReadings, counterErrorReadings, counterRelayOn);
     }
 }
 
