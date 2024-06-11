@@ -77,6 +77,8 @@ void vTaskCode( void * pvParameters )
     unsigned counterOkReadings{0};
     unsigned counterErrorReadings{0};
     unsigned counterRelayOn{0};
+    unsigned elevatedLevelCounter{0};
+    bool currentlyPumping{false};
 
     while (true)
     {
@@ -96,14 +98,33 @@ void vTaskCode( void * pvParameters )
             led_task(16, 0);
             counterErrorReadings++;
         }
-        if (waterLevel > 65) // 110
-        {
-            relay_task(1);
-            counterRelayOn++;
-        }
         if (waterLevel <= 35) // < 35
         {
             relay_task(0);
+            currentlyPumping = false;
+            elevatedLevelCounter = 0;
+        }
+        else if (currentlyPumping == false && waterLevel > 65) // 110
+        {
+            relay_task(1);
+            currentlyPumping = true;
+            counterRelayOn++;
+            elevatedLevelCounter = 0;
+        }
+        else if (currentlyPumping == false && waterLevel > 40)
+        {
+            elevatedLevelCounter++;
+            if (elevatedLevelCounter >= 900)
+            {
+                relay_task(1);
+                currentlyPumping = true;
+                counterRelayOn++;
+                elevatedLevelCounter = 0;
+            }
+        }
+        else
+        {
+            elevatedLevelCounter = 0;
         }
         vTaskDelay(1000);
         printf("Counter OK readings: %d\nCounter error readings: %d\ncounter relay on: %d\n", counterOkReadings, counterErrorReadings, counterRelayOn);
