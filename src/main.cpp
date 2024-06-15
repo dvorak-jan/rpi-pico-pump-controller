@@ -104,13 +104,15 @@ void vTaskCode( void * pvParameters )
     {
         auto waterLevel = read_adc_task(kAnalogInputGpioPin);
 
-        if(waterLevel > 0)
+        // If the reading is valid, blink the yellow LED
+        if(waterLevel > 0) 
         {
             led_task(kYellowLedGpioPin, 1);
             vTaskDelay(kLedBlinkInterval);
             led_task(kYellowLedGpioPin, 0);
             counterOkReadings++;
         }
+        // If the reading is invalid, blink the red LED
         else
         {
             led_task(kRedLedGpioPin, 1);
@@ -118,11 +120,14 @@ void vTaskCode( void * pvParameters )
             led_task(kRedLedGpioPin, 0);
             counterErrorReadings++;
         }
+
+        // If the water level is below the low threshold, turn off the relay
         if (waterLevel <= kWaterLevelLow)
         {
             relay_task(0);
             currentlyPumping = false;
         }
+        // If the water level is above the high threshold, turn on the relay
         else if (currentlyPumping == false && waterLevel > kWaterLevelHigh)
         {
             relay_task(1);
@@ -130,6 +135,7 @@ void vTaskCode( void * pvParameters )
             counterRelayOn++;
             elevatedLevelCounter = 0;
         }
+        // If the water level is above the elevated threshold for a certain amount of time, turn on the relay
         else if (currentlyPumping == false && waterLevel > kWaterLevelElevated)
         {
             elevatedLevelCounter++;
@@ -141,6 +147,8 @@ void vTaskCode( void * pvParameters )
                 elevatedLevelCounter = 0;
             }
         }
+        // If the pump is not currently pumping and the water level is not above the elevated threshold,
+        // decrement the elevated level counter
         else if (currentlyPumping == false)
         {
             if (elevatedLevelCounter > 0)
@@ -149,7 +157,11 @@ void vTaskCode( void * pvParameters )
             }
         }
         vTaskDelay(kSleepTimeBetweenCheckingSensor);
-        printf("Counter OK readings: %d\nCounter error readings: %d\ncounter relay on: %d\n", counterOkReadings, counterErrorReadings, counterRelayOn);
+
+        // Printing of the variable values is needed to prevent them being optimized-out by the compiler
+        printf("Counter OK readings: %d\n", counterOkReadings);
+        printf("Counter error readings: %d\n", counterErrorReadings);
+        printf("counter relay on: %d\n", counterRelayOn);
     }
 }
 
