@@ -10,11 +10,16 @@ This project contains firmware for a custom-built pump controller used to switch
 - pico-sdk is included as submodule.
 - Some other files needed to compile and build the project are included directly (in ./pico-cpp).
 
+## License
+
+This project is licensed under the terms of the MIT license.
+
 ## Cloning and building of the project
 
 ```
 git clone https://github.com/dvorak-jan/rpi-pico-pump-controller.git
 cd rpi-pico-pump-controller
+git checkout develop
 git submodule init
 git submodule update
 cmake -B build
