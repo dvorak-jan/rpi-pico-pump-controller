@@ -10,18 +10,38 @@
 #include "GPIO.hpp"
 #include "hardware/adc.h"
 
+/* Constants */
+constexpr int kRelayGpioPin = 6;
+constexpr int kAnalogInputGpioPin = 26;
+
+constexpr int kGreenLedGpioPin = 17;
+constexpr int kYellowLedGpioPin = 18;
+constexpr int kRedLedGpioPin = 16;
+
+constexpr unsigned kSensorReadingCount = 200;
+constexpr unsigned kSensorReadingInterval = 10; // milliseconds
+
+constexpr unsigned kLedBlinkInterval = 300; // milliseconds
+
+constexpr unsigned kWaterLevelLow = 35;
+constexpr unsigned kWaterLevelHigh = 65;
+constexpr unsigned kWaterLevelElevated = 40;
+
+constexpr unsigned kElevatedLevelCounterThreshold = 300; // approx. 15 minutes
+
+constexpr unsigned kSleepTimeBetweenCheckingSensor = 1000; // milliseconds
+
 void relay_task(int switch_on_off)
 {
-    int gpio = 6;
-    gpio_init(gpio);
-    gpio_set_dir(gpio, GPIO_OUT);
+    gpio_init(kRelayGpioPin);
+    gpio_set_dir(kRelayGpioPin, GPIO_OUT);
     if (switch_on_off == 0)
     {
-        gpio_put(gpio, 0);
+        gpio_put(kRelayGpioPin, 0);
     }
     else
     {
-        gpio_put(gpio, 1);
+        gpio_put(kRelayGpioPin, 1);
     }
 }
 
@@ -41,17 +61,17 @@ void led_task(int gpio, int switch_on_off)
 
 void init_led_task()
 {
-    led_task(17, 1);
-    vTaskDelay(300);
-    led_task(17, 0);
-    led_task(18, 1);
-    vTaskDelay(300);
-    led_task(18, 0);
-    led_task(16, 1);
-    vTaskDelay(300);
-    led_task(16, 0);
-    vTaskDelay(300);
-    led_task(17, 1);
+    led_task(kGreenLedGpioPin, 1);
+    vTaskDelay(kLedBlinkInterval);
+    led_task(kGreenLedGpioPin, 0);
+    led_task(kYellowLedGpioPin, 1);
+    vTaskDelay(kLedBlinkInterval);
+    led_task(kYellowLedGpioPin, 0);
+    led_task(kRedLedGpioPin, 1);
+    vTaskDelay(kLedBlinkInterval);
+    led_task(kRedLedGpioPin, 0);
+    vTaskDelay(kLedBlinkInterval);
+    led_task(kGreenLedGpioPin, 1);
 }
 
 unsigned read_adc_task(int gpio)
@@ -60,61 +80,60 @@ unsigned read_adc_task(int gpio)
     adc_gpio_init(gpio);
     adc_select_input(0);
 
-    unsigned readings[200];
-    for (int i = 0; i < 200; i++) {
+    unsigned readings[kSensorReadingCount];
+    for (unsigned i = 0; i < kSensorReadingCount; i++) {
         readings[i] = adc_read();
-        vTaskDelay(10); // Delay for 10 milliseconds between each reading
+        vTaskDelay(kSensorReadingInterval); // Delay between each reading
     }
 
-    std::sort(readings, readings + 200); // Sort the readings in ascending order
+    std::sort(readings, readings + kSensorReadingCount); // Sort the readings in ascending order
 
-    return readings[100]; // Return the median value (middle value)
+    return readings[kSensorReadingCount/2]; // Return the median value (middle value)
 }
 
 void vTaskCode( void * pvParameters )
 {
     init_led_task();
-    unsigned counterOkReadings{0};
-    unsigned counterErrorReadings{0};
+    unsigned long counterOkReadings{0};
+    unsigned long counterErrorReadings{0};
     unsigned counterRelayOn{0};
     unsigned elevatedLevelCounter{0};
     bool currentlyPumping{false};
 
     while (true)
     {
-        auto waterLevel = read_adc_task(26);
+        auto waterLevel = read_adc_task(kAnalogInputGpioPin);
 
         if(waterLevel > 0)
         {
-            led_task(18, 1);
-            vTaskDelay(300);
-            led_task(18, 0);
+            led_task(kYellowLedGpioPin, 1);
+            vTaskDelay(kLedBlinkInterval);
+            led_task(kYellowLedGpioPin, 0);
             counterOkReadings++;
         }
         else
         {
-            led_task(16, 1);
-            vTaskDelay(300);
-            led_task(16, 0);
+            led_task(kRedLedGpioPin, 1);
+            vTaskDelay(kLedBlinkInterval);
+            led_task(kRedLedGpioPin, 0);
             counterErrorReadings++;
         }
-        if (waterLevel <= 35) // < 35
+        if (waterLevel <= kWaterLevelLow)
         {
             relay_task(0);
             currentlyPumping = false;
-            elevatedLevelCounter = 0;
         }
-        else if (currentlyPumping == false && waterLevel > 65) // 110
+        else if (currentlyPumping == false && waterLevel > kWaterLevelHigh)
         {
             relay_task(1);
             currentlyPumping = true;
             counterRelayOn++;
             elevatedLevelCounter = 0;
         }
-        else if (currentlyPumping == false && waterLevel > 40)
+        else if (currentlyPumping == false && waterLevel > kWaterLevelElevated)
         {
             elevatedLevelCounter++;
-            if (elevatedLevelCounter >= 900)
+            if (elevatedLevelCounter >= kElevatedLevelCounterThreshold)
             {
                 relay_task(1);
                 currentlyPumping = true;
@@ -122,11 +141,14 @@ void vTaskCode( void * pvParameters )
                 elevatedLevelCounter = 0;
             }
         }
-        else
+        else if (currentlyPumping == false)
         {
-            elevatedLevelCounter = 0;
+            if (elevatedLevelCounter > 0)
+            {
+                elevatedLevelCounter--;
+            }
         }
-        vTaskDelay(1000);
+        vTaskDelay(kSleepTimeBetweenCheckingSensor);
         printf("Counter OK readings: %d\nCounter error readings: %d\ncounter relay on: %d\n", counterOkReadings, counterErrorReadings, counterRelayOn);
     }
 }
