@@ -1,3 +1,35 @@
+# RPI Pico Pump Controller
+
+## Description
+
+This project contains firmware for a custom-built pump controller used to switch-on/off a garden pump based on the input from hydrostatic sensor (analog input).
+
+## Dependencies
+
+- FreeRTOS-Kernel is included as submodule.
+- pico-sdk is included as submodule.
+- Some other files needed to compile and build the project are included directly (in ./pico-cpp).
+
+## Cloning and building of the project
+
+```
+git clone https://github.com/dvorak-jan/rpi-pico-pump-controller.git
+cd rpi-pico-pump-controller
+git submodule init
+git submodule update
+cmake -B build
+cmake --build build
+```
+
+## Collaborators
+
+- Please clone the project, checkout develop branch (``git checkout develop``)
+
+- Create your own feature branch (``git checkout -B feature/my-feature-description``)
+
+- Push to the remote repository as needed and raise PR when ready
+- Do not merge into develop without permission
+
 # Debugging/flashing Pico using debug probe, Openocd and Dbg
 
 ## Flashing firmware to pico using the debug probe:
