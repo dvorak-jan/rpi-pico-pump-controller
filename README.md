@@ -39,17 +39,17 @@ cmake --build build
 
 ## Flashing firmware to pico using the debug probe:
 
-Copy the .elf file to /home/jan/pico/openocd/to_flash/
+Copy the .elf file e.g. to ~/pico/openocd/to_flash/
 
-``cp pump_project.elf /home/jan/pico/openocd/to_flash/``
+``cp pump_project.elf ~/pico/openocd/to_flash/``
 
-Run the following command from /home/jan/pico/openocd:
+Run the following command e.g. from ~/pico/openocd:
 
 ``sudo openocd -f interface/cmsis-dap.cfg -f target/rp2040.cfg -c "adapter speed 5000" -c "program to_flash/pump_project.elf verify reset exit"``
 
 ## Using Openocd for access to pico debug features
 
-Start openocd by running the following command from /home/jan/pico/openocd:
+Start openocd by running the following command e.g. from ~/pico/openocd:
 
 ``sudo src/openocd -f interface/cmsis-dap.cfg -c "adapter speed 5000" -f target/rp2040.cfg -s tcl``
 
