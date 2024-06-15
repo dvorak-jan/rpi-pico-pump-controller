@@ -7,15 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [unreleased]
 
-### Changed
+### Added
+- When the water is at elevated level (not exceeding the high threshold) for a certain amount of time, it is pumped out
 
+### Changed
 - Include pico-sdk as submodule
 - Include FreeRTOS-Kernel as submodule
+
 
 ## [0.1.0] - 2024-06-01
 
 ### Added
-
 - Control LEDs
 - Read analog inputs from the hydrostatic sensor
 - Switch on the relay when the level exceeds defined level
