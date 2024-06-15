@@ -1,9 +1,9 @@
-# This is a copy of <PICO_SDK_PATH>/external/pico_sdk_import.cmake
+# This is an edited copy of <PICO_SDK_PATH>/external/pico_sdk_import.cmake
 
 # This can be dropped into an external project to help locate this SDK
 # It should be include()ed prior to project()
 
-set(PICO_SDK_PATH "/home/jan/pico/pico-sdk/")
+set(PICO_SDK_PATH "${CMAKE_SOURCE_DIR}/pico-sdk/")
 
 if (DEFINED ENV{PICO_SDK_PATH} AND (NOT PICO_SDK_PATH))
     set(PICO_SDK_PATH $ENV{PICO_SDK_PATH})
