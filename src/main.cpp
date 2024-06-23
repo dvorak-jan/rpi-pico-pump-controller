@@ -23,12 +23,11 @@ constexpr unsigned kSensorReadingInterval = 10; // milliseconds
 
 constexpr unsigned kLedBlinkInterval = 300; // milliseconds
 
-constexpr unsigned kWaterLevelLow = 35;
-constexpr unsigned kWaterLevelHigh = 65;
-constexpr unsigned kWaterLevelElevated = 40;
+constexpr unsigned kWaterLevelLow = 32;
+constexpr unsigned kWaterLevelHigh = 110;
+constexpr unsigned kWaterLevelElevated = 70;
 
-constexpr unsigned kElevatedLevelCounterThreshold = 300; // approx. 15 minutes
-
+constexpr unsigned kElevatedLevelCounterThreshold = 1200; // approx. 1 hour
 constexpr unsigned kSleepTimeBetweenCheckingSensor = 1000; // milliseconds
 
 void relay_task(int switch_on_off)
